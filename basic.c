@@ -2,31 +2,46 @@
 
 double basic_calc(int op, double a, double b)
 {
+    double result;
+
     switch(op)
     {
         case ADD:
-            return a + b;
+            result = a + b;
+            break;
 
         case SUBTRACT:
-            return a - b;
+            result = a - b;
+            break;
 
         case MULTIPLY:
-            return a * b;
+            result = a * b;
+            break;
 
         case DIVIDE:
             if(b == 0)
                 return NAN;
-            return a / b;
+
+            result = a / b;
+            break;
 
         case POWER:
-            return pow(a, b);
+            result = pow(a, b);
+            break;
 
         case MODULUS:
             if(b == 0)
                 return NAN;
-            return fmod(a, b);
+
+            result = fmod(a, b);
+            break;
 
         default:
             return NAN;
     }
+
+    if(!isfinite(result))
+        return NAN;
+
+    return result;
 }
