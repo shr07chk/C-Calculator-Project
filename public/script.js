@@ -52,77 +52,75 @@ function esc(s) {
 }
 
 // math engine
-function factorial(x) {
-  if (x < 0 || x > 170 || Math.floor(x) !== x) throw new Error('bad factorial input');
-  let r = 1;
-  for (let i = 2; i <= x; i++) r *= i;
-  return r;
+// C WebAssembly calculation engine
+
+const basicOperations = {
+  add: 1,
+  subtract: 2,
+  multiply: 3,
+  divide: 4,
+  power: 5,
+  mod: 6
+};
+
+const scientificOperations = {
+  sin: 1,
+  cos: 2,
+  tan: 3,
+  asin: 4,
+  acos: 5,
+  atan: 6,
+  sinh: 7,
+  cosh: 8,
+  tanh: 9,
+  sqrt: 10,
+  cbrt: 11,
+  square: 12,
+  cube: 13,
+  factorial: 14,
+  log: 15,
+  ln: 16,
+  exp: 17,
+  abs: 18,
+  reciprocal: 19,
+  percent: 20,
+  pi: 21,
+  e: 22
+};
+
+function api(op, a, b = 0) {
+  if (!window.Module || !Module.cReady) {
+  throw new Error("C calculator is loading");
 }
 
-function calc(op, a, b) {
-  const deg = angle === 'DEG';
-  const pi = Math.PI;
-  const x = deg ? a * pi / 180 : a;
+  let result;
 
-  switch (op) {
-    case 'add': return a + b;
-    case 'subtract': return a - b;
-    case 'multiply': return a * b;
-    case 'divide':
-      if (b === 0) throw new Error('div by zero');
-      return a / b;
-    case 'power': return Math.pow(a, b);
-    case 'mod':
-      if (b === 0) throw new Error('div by zero');
-      return a % b;
-    case 'sin': return Math.sin(x);
-    case 'cos': return Math.cos(x);
-    case 'tan':
-      if (Math.abs(Math.cos(x)) < 1e-12) throw new Error('undefined');
-      return Math.tan(x);
-    case 'asin':
-      if (a < -1 || a > 1) throw new Error('domain error');
-      { const r = Math.asin(a); return deg ? r * 180 / pi : r; }
-    case 'acos':
-      if (a < -1 || a > 1) throw new Error('domain error');
-      { const r = Math.acos(a); return deg ? r * 180 / pi : r; }
-    case 'atan':
-      { const r = Math.atan(a); return deg ? r * 180 / pi : r; }
-    case 'sinh': return Math.sinh(a);
-    case 'cosh': return Math.cosh(a);
-    case 'tanh': return Math.tanh(a);
-    case 'sqrt':
-      if (a < 0) throw new Error('negative sqrt');
-      return Math.sqrt(a);
-    case 'cbrt': return Math.cbrt(a);
-    case 'square': return a * a;
-    case 'cube': return a * a * a;
-    case 'log':
-      if (a <= 0) throw new Error('log domain');
-      return Math.log10(a);
-    case 'ln':
-      if (a <= 0) throw new Error('ln domain');
-      return Math.log(a);
-    case 'exp': return Math.exp(a);
-    case 'factorial': return factorial(a);
-    case 'abs': return Math.abs(a);
-    case 'reciprocal':
-      if (a === 0) throw new Error('div by zero');
-      return 1 / a;
-    case 'percent': return a / 100;
-    case 'pi': return pi;
-    case 'e': return Math.E;
-    default: throw new Error('unknown op');
+  if (basicOperations[op] !== undefined) {
+    result = Module.ccall(
+      'basic_calc',
+      'number',
+      ['number', 'number', 'number'],
+      [basicOperations[op], a, b]
+    );
+  } else if (scientificOperations[op] !== undefined) {
+    const angleMode = angle === 'DEG' ? 0 : 1;
+
+    result = Module.ccall(
+      'scientific_calc',
+      'number',
+      ['number', 'number', 'number'],
+      [scientificOperations[op], a, angleMode]
+    );
+  } else {
+    throw new Error('Unknown operation');
   }
-}
 
-function api(op, a, b) {
-  b = b || 0;
-  const r = calc(op, a, b);
-  if (!Number.isFinite(r)) throw new Error('math error');
-  return r;
-}
+  if (!Number.isFinite(result)) {
+    throw new Error('Math error');
+  }
 
+  return result;
+}
 // tokenizer
 function tokenize(input) {
   const s = input.replace(/π/g, 'pi').replace(/\be\b/g, 'e').replace(/×/g, '*').replace(/÷/g, '/');

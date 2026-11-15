@@ -97,6 +97,19 @@
 
   <footer>built by saurav</footer>
 
-  <script src="script.js"></script>
+  <script>
+  var Module = {
+    cReady: false,
+
+    onRuntimeInitialized: function () {
+      Module.cReady = true;
+      console.log("C Calculator is ready!");
+      document.getElementById("status").textContent = "READY";
+    }
+  };
+</script>
+
+<script src="calculator.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
