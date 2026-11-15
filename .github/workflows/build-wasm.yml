@@ -1,0 +1,35 @@
+name: Build C Calculator for Web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get project files
+        uses: actions/checkout@v6
+
+      - name: Install Emscripten
+        uses: emscripten-core/setup-emsdk@v15
+
+      - name: Compile C files to WebAssembly
+        run: |
+          emcc basic.c scientific.c \
+            --no-entry \
+            -O2 \
+            -sEXPORTED_FUNCTIONS=_basic_calc,_scientific_calc \
+            -sEXPORTED_RUNTIME_METHODS=ccall \
+            -lm \
+            -o public/calculator.js
+
+      - name: Save compiled files
+        uses: actions/upload-artifact@v6
+        with:
+          name: calculator-webassembly
+          path: |
+            public/calculator.js
+            public/calculator.wasm
